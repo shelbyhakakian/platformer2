@@ -7,6 +7,7 @@
 	<script src="src/phaser.js"></script>
 </head>
 <body>
+
 	<script type="text/javascript">
 	
 
@@ -38,6 +39,14 @@
 		var text;
 		var score = 0;
 		var text;
+		var win;
+		var ghost;
+		var slime;
+		var worm;
+		var slimeBlock;
+		var collectWorm;
+		var wormCount= 0;
+		var wormtext;
 
 		/**
 		 * [preload: This function is used to load the assets for our game]
@@ -53,8 +62,14 @@
 			//simple coin image
 			this.load.image('coin', 'assets/coinGold.png');
 
+			this.load.image('ghost', 'assets/ghost.png');
+			this.load.image('slime', 'assets/slime.png');
+			this.load.image('slimeBlock', 'assets/slimeBlock.png');
+			this.load.image('worm', 'assets/worm_walk.png');
+
 			//player animations
 			this.load.atlas('player', 'assets/player.png', 'assets/player.json');
+
 		}
 
 		/**
@@ -86,9 +101,14 @@
 				player = this.physics.add.sprite(200,200, 'player');
 				player.setBounce(0.2);
 				player.setCollideWorldBounds(true);
+				player.body.setGravity(0,300);
 
 				//Add Keyboard Events
 				cursors = this.input.keyboard.createCursorKeys();
+
+				worm = this.physics.add.sprite(400,500, 'worm');
+				worm.setBounce(0.2);
+				worm.setCollideWorldBounds(true);
 
 
 			//CAMERA
@@ -100,7 +120,7 @@
 				this.cameras.main.startFollow(player);
 
 				//set background color, so the sky is not black
-				this.cameras.main.setBackgroundColor('#ccccff');
+				this.cameras.main.setBackgroundColor('#000000');
 
 			//ANIMATION
 			
@@ -122,10 +142,11 @@
 				//Coin image used as tileset
 				var coinTiles = map.addTilesetImage('coin');
 
-				//add coints as tiles
+				//add coins as tiles
 				coinLayer = map.createDynamicLayer('Coins', coinTiles, 0, 0);
 
 				coinLayer.setTileIndexCallback(17, collectCoin, this );
+
 
 			//OBJECT COLLISIONS
 			
@@ -134,6 +155,8 @@
 
 				//Collision between coin and player
 				this.physics.add.overlap(player, coinLayer);
+				this.physics.add.collider(groundLayer, worm);
+				this.physics.add.overlap(player, worm, collectWorm, null, this);
 
 			
 			//SCORE UI
@@ -143,6 +166,14 @@
 					fill: '#ffffff'
 				});
 				text.setScrollFactor(0);
+
+			//Worms UI
+
+				Wormtext = this.add.text(650, 570, 'Worms = '+ wormCount, {
+					fontSize : '20px',
+					fill: '#ffffff'
+				});
+				Wormtext.setScrollFactor(0);
 
 		}
 
@@ -174,7 +205,13 @@
 					//flip image horizontally
 					player.flipX = false;
 
+				}else {
+
+					player.body.setVelocityX(0);
+					player.anims.play('idle', true);
 				}
+
+			
 
 				if((cursors.space.isDown || cursors.up.isDown) && player.body.onFloor()){
 					
@@ -197,9 +234,26 @@
 			score++;
 
 			//update Score UI
-			text.setText(score);
+			text.setText("Coins:" + score + "/16");
 
+			//return false;
+			if(score >= 1){
+					this.add.text(400, 250, 'YOU WIN', {fontSize: '80px', fill : '#000'});
+				}
+				
+			}
+		function collectWorm( player, worm ){
+			//remove tile from screen
+			worm.disableBody(true,true);
+
+			//add 1 to the score
+			wormCount++;
+
+			//update Score UI
+			Wormtext.setText("Worms: " + wormCount + "/1");
+		
 			return false;
+			
 		}
 
 	</script>	
