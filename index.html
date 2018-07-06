@@ -18,7 +18,7 @@
 			physics:{
 				default: 'arcade',
 				arcade: {
-					gravity: {y: 500},
+					gravity: {y: 250},
 					debug: false
 				}
 			},
@@ -39,7 +39,6 @@
 		var text;
 		var score = 0;
 		var text;
-		var win;
 		var ghost;
 		var slime;
 		var worm;
@@ -47,6 +46,26 @@
 		var collectWorm;
 		var wormCount= 0;
 		var wormtext;
+		var wintext;
+		var deadworm;
+		var losetext;
+		var partner;
+		var blue;
+		var pink;
+		var snail;
+		var hint1;
+		var hint1b;
+		var hint2;
+		var hint2b;
+		var hint2c;
+		var endtext;
+		var barnacle;
+		var barnacle2;
+		var hint3;
+		var fish;
+		var fishg;
+
+		
 
 		/**
 		 * [preload: This function is used to load the assets for our game]
@@ -66,7 +85,16 @@
 			this.load.image('slime', 'assets/slime.png');
 			this.load.image('slimeBlock', 'assets/slimeBlock.png');
 			this.load.image('worm', 'assets/worm_walk.png');
-
+			this.load.image('deadworm', 'assets/worm_dead.png');
+			this.load.image('partner', 'assets/alienPink.png');
+			this.load.image('blue', 'assets/slimeBlue.png');
+			this.load.image('pink', 'assets/slime.png');
+			this.load.image('pink', 'assets/slime.png');
+			this.load.image('snail', 'assets/snail.png');
+			this.load.image('barnacle', 'assets/barnacle_dead.png');
+			this.load.image('barnacle2', 'assets/barnacle_dead.png');
+			this.load.image('fish', 'assets/fishPink.png');
+			this.load.image('fishg', 'assets/fishGreen.png');
 			//player animations
 			this.load.atlas('player', 'assets/player.png', 'assets/player.json');
 
@@ -101,15 +129,51 @@
 				player = this.physics.add.sprite(200,200, 'player');
 				player.setBounce(0.2);
 				player.setCollideWorldBounds(true);
-				player.body.setGravity(0,300);
+				player.body.setGravity(0,250);
 
 				//Add Keyboard Events
 				cursors = this.input.keyboard.createCursorKeys();
 
-				worm = this.physics.add.sprite(400,500, 'worm');
+				worm = this.physics.add.sprite(4300,2000, 'worm');
 				worm.setBounce(0.2);
 				worm.setCollideWorldBounds(true);
 
+				deadworm = this.physics.add.sprite(2600,1000, 'deadworm');
+				deadworm.setBounce(0.2);
+				deadworm.setCollideWorldBounds(true);
+
+				partner = this.physics.add.sprite(4000,200, 'partner');
+				partner.setBounce(0.2);
+				partner.setCollideWorldBounds(true);
+
+				pink = this.physics.add.sprite(650,500, 'pink');
+				pink.setBounce(0.2);
+				pink.setCollideWorldBounds(true);
+
+				blue = this.physics.add.sprite(1210,500, 'blue');
+				blue.setBounce(0.2);
+				blue.setCollideWorldBounds(true);
+
+				snail = this.physics.add.sprite(815,400, 'snail');
+				snail.setBounce(0.2);
+				snail.setCollideWorldBounds(true);
+
+				barnacle = this.physics.add.sprite(3100,200, 'barnacle');
+				barnacle.setBounce(0.2);
+				barnacle.setCollideWorldBounds(true);
+
+
+				barnacle2 = this.physics.add.sprite(3500,200, 'barnacle2');
+				barnacle2.setBounce(0.2);
+				barnacle2.setCollideWorldBounds(true);
+
+				fish = this.physics.add.sprite(3250,1000, 'fish');
+				fish.setBounce(0.2);
+				fish.setCollideWorldBounds(true);
+
+				fishg = this.physics.add.sprite(3050,800, 'fishg');
+				fishg.setBounce(0.2);
+				fishg.setCollideWorldBounds(true);
 
 			//CAMERA
 				
@@ -152,16 +216,32 @@
 			
 				//Collision between floor and player
 				this.physics.add.collider(groundLayer, player);
+				this.physics.add.collider(groundLayer, deadworm);
+				this.physics.add.collider(groundLayer, partner);
+				this.physics.add.collider(groundLayer, blue);
+				this.physics.add.collider(groundLayer, pink);
+				this.physics.add.collider(groundLayer, snail);
+				this.physics.add.collider(groundLayer, barnacle);
+				this.physics.add.collider(groundLayer, barnacle2);
+				this.physics.add.collider(groundLayer, fish);
+				this.physics.add.collider(groundLayer, fishg);
 
 				//Collision between coin and player
 				this.physics.add.overlap(player, coinLayer);
 				this.physics.add.collider(groundLayer, worm);
 				this.physics.add.overlap(player, worm, collectWorm, null, this);
-
-			
+				this.physics.add.overlap(player, deadworm, hitWorm, null, this);
+				this.physics.add.overlap(player, partner, win, null, this);
+				this.physics.add.overlap(player, pink, hitpink, null, this);
+				this.physics.add.overlap(player, blue, hitblue, null, this);
+				this.physics.add.overlap(player, snail, collectsnail, null, this);
+				this.physics.add.overlap(player, barnacle, hitbarnacle, null, this);
+				this.physics.add.overlap(player, barnacle2, hitbarnacle2, null, this);
+				this.physics.add.overlap(player, fish, hitfish, null, this);
+				this.physics.add.overlap(player, fishg, hitfishg, null, this);
 			//SCORE UI
 				
-				text = this.add.text(20, 570, '0', {
+				text = this.add.text(20, 570, 'Coins: 0', {
 					fontSize : '20px',
 					fill: '#ffffff'
 				});
@@ -169,11 +249,56 @@
 
 			//Worms UI
 
-				Wormtext = this.add.text(650, 570, 'Worms = '+ wormCount, {
+				Wormtext = this.add.text(630, 570, 'Friends: '+ wormCount, {
 					fontSize : '20px',
 					fill: '#ffffff'
 				});
 				Wormtext.setScrollFactor(0);
+
+				losetext = this.add.text(200, 250, '', {
+					fontSize : '60px',
+					fill: '#ff0000'
+				});
+				losetext.setScrollFactor(0);
+
+				wintext = this.add.text(250, 250, '', {
+					fontSize : '60px',
+					fill: '#7CFC00'
+				});
+				wintext.setScrollFactor(0);
+
+				hint1 = this.add.text(435, 2500, 'Follow the path', {
+					fontSize : '20px',
+					fill: '#00BFFF'
+				});
+				hint1b = this.add.text(435, 2550, 'to find your partner', {
+					fontSize : '20px',
+					fill: '#00BFFF'
+				});
+				
+				endtext = this.add.text(3940,800, 'You found me!', {
+					fontSize : '20px',
+					fill: '#DDA0DD'
+				});
+
+				hint2 = this.add.text(3900, 2500, 'Here is your first friend.', {
+					fontSize : '20px',
+					fill: '	#90EE90'
+				});
+				hint2b = this.add.text(3900, 2550, 'This one is nice, ', {
+					fontSize : '20px',
+					fill: '	#90EE90'
+				});
+				hint2c = this.add.text(3900, 2600, 'but the rest might not be... ', {
+					fontSize : '20px',
+					fill: '	#90EE90'
+				});
+				hint3 = this.add.text(780, 2000, 'Choose One Carefully...', {
+					fontSize : '20px',
+					fill: '#DC143C'
+				});
+
+
 
 		}
 
@@ -187,7 +312,7 @@
 				
 				if( cursors.left.isDown ){ // If the left arrow key is pressed down
 					//activate motion
-					player.body.setVelocityX(-200);
+					player.body.setVelocityX(-400);
 
 					//activate animation
 					player.anims.play('walk', true);
@@ -197,7 +322,7 @@
 
 				}else if(cursors.right.isDown){  // If the right arrow key is pressed down
 					//activate motion
-					player.body.setVelocityX(200);
+					player.body.setVelocityX(400);
 
 					//activate animation
 					player.anims.play('walk', true);
@@ -234,12 +359,9 @@
 			score++;
 
 			//update Score UI
-			text.setText("Coins:" + score + "/16");
+			text.setText("Coins:" + score);
 
 			//return false;
-			if(score >= 1){
-					this.add.text(400, 250, 'YOU WIN', {fontSize: '80px', fill : '#000'});
-				}
 				
 			}
 		function collectWorm( player, worm ){
@@ -250,10 +372,78 @@
 			wormCount++;
 
 			//update Score UI
-			Wormtext.setText("Worms: " + wormCount + "/1");
+			Wormtext.setText("Friends:" + wormCount );
 		
 			return false;
 			
+		}
+		function hitWorm( player, deadworm ){
+
+			losetext.setText("OOPS, YOU LOSE");
+			player.disableBody(true,true);
+		
+			
+		}
+		function win( player, partner ){
+
+			wintext.setText("YOU WON");
+			wintext.setScrollFactor(0);
+			player.disableBody(true,true);
+
+		}
+		function hitblue( player, blue ){
+			blue.disableBody(true,true);
+			wormCount++; 
+			Wormtext.setText("Friends: " + wormCount );
+		
+			return false;
+			
+
+		}
+		function hitpink( player, pink ){
+
+			losetext.setText("OOPS, YOU LOSE");
+			player.disableBody(true,true);
+
+
+		}
+		function collectsnail( player, snail ){
+
+			snail.disableBody(true,true);
+			wormCount++; 
+			Wormtext.setText("Friends: " + wormCount );
+		
+			return false;
+
+		}
+
+		function hitbarnacle( player, barnacle ){
+
+			player.disableBody(true,true);
+			losetext.setText("OOPS, YOU LOSE");
+
+		}
+
+
+		function hitbarnacle2( player, barnacle2 ){
+
+			player.disableBody(true,true);
+			losetext.setText("OOPS, YOU LOSE");
+
+		}
+
+		function hitfish( player, fish ){
+			fish.disableBody(true,true);
+			wormCount++; 
+			Wormtext.setText("Friends: " + wormCount );
+		
+			return false;
+		}
+		function hitfishg( player, fishg ){
+
+			player.disableBody(true,true);
+			losetext.setText("OOPS, YOU LOSE");
+
 		}
 
 	</script>	
